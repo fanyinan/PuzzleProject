@@ -120,7 +120,7 @@ class ViewController: UIViewController {
     if puzzleView != nil {
       puzzleView.removeFromSuperview()
     }
-    puzzleView = PuzzleView(frame: CGRect(x: 10, y: 100, width: view.frame.width - 20, height: view.frame.width - 20), puzzleColumn: 5, image: UIImage(named: "image0")!, puzzleIndexList: [4,7,13,2,8,5,16,6,1,3,14,0,24,11,9,22,19,15,12,18,20,17,10,21,23])
+    puzzleView = PuzzleView(frame: CGRect(x: 10, y: 100, width: view.frame.width - 20, height: view.frame.width - 20), puzzleColumn: currentColumn, image: UIImage(named: "image0")!)
 
     puzzleView.test = true
     view.addSubview(puzzleView)

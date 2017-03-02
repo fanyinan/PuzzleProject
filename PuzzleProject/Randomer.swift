@@ -12,39 +12,39 @@ class Randomer {
   
   private var previousPosition: Position = Position(row: -1, col: -1)//记录随机排序时移动之前的位置
 
-  func randomPuzzlePath(with puzzleInfo: PuzzleInfo) -> [SwapPath]{
+  func randomPuzzlePath(with puzzleNode: PuzzleNode) -> [SwapPath]{
     
-    let puzzleInfo = puzzleInfo.copy() as! PuzzleInfo
+    let puzzleNode = puzzleNode.copy()
     
-    let swapNum = puzzleInfo.numberOfItem() * puzzleInfo.numberOfItem()
-    var swapCountList = Array<Int>(repeating: 0, count: puzzleInfo.numberOfItem())
-    swapCountList[puzzleInfo.puzzleNode.blankIndex] = 1
+    let swapNum = puzzleNode.numberOfItem() * puzzleNode.numberOfItem()
+    var swapCountList = Array<Int>(repeating: 0, count: puzzleNode.numberOfItem())
+    swapCountList[puzzleNode.blankIndex] = 1
 
     var pathList: [SwapPath] = []
     
     for _ in 0..<swapNum {
       
-      let blankPosition = puzzleInfo.getPosition(at: puzzleInfo.puzzleNode.blankIndex)
-      var adjacentPositions = puzzleInfo.getAdjacentPositions(at: blankPosition)
+      let blankPosition = puzzleNode.getPosition(at: puzzleNode.blankIndex)
+      var adjacentPositions = puzzleNode.getAdjacentPositions(at: blankPosition)
       
       //获得相邻块中被移动到此为止最少的块的列表，并且不能是刚刚移动过来的位置
-      adjacentPositions = adjacentPositions.sorted(by: {swapCountList[puzzleInfo.getIndex(at: $0)] < swapCountList[puzzleInfo.getIndex(at: $1)]})
+      adjacentPositions = adjacentPositions.sorted(by: {swapCountList[puzzleNode.getIndex(at: $0)] < swapCountList[puzzleNode.getIndex(at: $1)]})
       
       adjacentPositions = adjacentPositions.filter({!$0.equal(toPosition: previousPosition)})
       
-      adjacentPositions = adjacentPositions.filter({swapCountList[puzzleInfo.getIndex(at: adjacentPositions[0])] == swapCountList[puzzleInfo.getIndex(at: $0)]})
+      adjacentPositions = adjacentPositions.filter({swapCountList[puzzleNode.getIndex(at: adjacentPositions[0])] == swapCountList[puzzleNode.getIndex(at: $0)]})
       
       let positionToSwap = adjacentPositions[Int(arc4random() % UInt32(adjacentPositions.count))]
-      pathList += [puzzleInfo.swap(from: blankPosition, to: positionToSwap)]
-      swapCountList[puzzleInfo.getIndex(at: positionToSwap)] += 1
-      puzzleInfo.puzzleNode.blankIndex = puzzleInfo.getIndex(at: positionToSwap)
+      pathList += [puzzleNode.swap(from: blankPosition, to: positionToSwap)]
+      swapCountList[puzzleNode.getIndex(at: positionToSwap)] += 1
+      puzzleNode.blankIndex = puzzleNode.getIndex(at: positionToSwap)
       
       previousPosition = blankPosition
       
     }
     
     makePreviousPositionEmpty()
-    pathList += puzzleInfo.getPath(from: puzzleInfo.puzzleNode.blankIndex, to: puzzleInfo.numberOfItem() - 1, with: [])!
+    pathList += puzzleNode.getPath(from: puzzleNode.blankIndex, to: puzzleNode.numberOfItem() - 1, with: [])!
 
     swapCountList.removeAll()
     

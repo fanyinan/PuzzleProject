@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		CF45D6211E67DB1700616D3D /* PuzzleInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF45D6201E67DB1700616D3D /* PuzzleInfo.swift */; };
 		CF764D5B1BD5E51300CA06A8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF764D5A1BD5E51300CA06A8 /* AppDelegate.swift */; };
 		CF764D5D1BD5E51300CA06A8 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF764D5C1BD5E51300CA06A8 /* ViewController.swift */; };
 		CF764D601BD5E51300CA06A8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CF764D5E1BD5E51300CA06A8 /* Main.storyboard */; };
@@ -27,7 +26,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		CF45D6201E67DB1700616D3D /* PuzzleInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PuzzleInfo.swift; sourceTree = "<group>"; };
 		CF764D571BD5E51300CA06A8 /* PuzzleProject.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PuzzleProject.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CF764D5A1BD5E51300CA06A8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CF764D5C1BD5E51300CA06A8 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -86,7 +84,6 @@
 				CF764D631BD5E51300CA06A8 /* LaunchScreen.storyboard */,
 				CF764D661BD5E51300CA06A8 /* Info.plist */,
 				CF764D6C1BD5E52B00CA06A8 /* PuzzleView.swift */,
-				CF45D6201E67DB1700616D3D /* PuzzleInfo.swift */,
 				CF97F58D1DF9524400B0FC96 /* PuzzleNode.swift */,
 				CF97F57D1DF7D12500B0FC96 /* SwapPath.swift */,
 				CF97F57F1DF7D14700B0FC96 /* Position.swift */,
@@ -179,7 +176,6 @@
 				CF97F57E1DF7D12500B0FC96 /* SwapPath.swift in Sources */,
 				CFFD900A1DFE472200C0729D /* PriorityQueue.swift in Sources */,
 				CF97F5881DF935A700B0FC96 /* PuzzlePathSearch.swift in Sources */,
-				CF45D6211E67DB1700616D3D /* PuzzleInfo.swift in Sources */,
 				CF764D6F1BD5E6D100CA06A8 /* UIColor.swift in Sources */,
 				CF97F58E1DF9524400B0FC96 /* PuzzleNode.swift in Sources */,
 				CF97F58A1DF9360C00B0FC96 /* BreathFirstSearcher.swift in Sources */,

@@ -29,7 +29,7 @@ class PuzzleView: UIView {
   private var originImage: UIImage? //原始图片
   private var puzzleItemWidth:CGFloat = 0 //拼图块的宽度
   private var isAutoMoving = false//标识是否正在自动移动，（随机和完成）
-  private(set) var puzzleInfo: PuzzleInfo
+  private(set) var puzzleNode: PuzzleNode
   private var randomer = Randomer()
   private var normalPathSearch = NormalPathSearch()
   private var search = AStarSearcher()
@@ -72,8 +72,7 @@ class PuzzleView: UIView {
   
   init(frame: CGRect, puzzleColumn: Int, image: UIImage?, puzzleIndexList: [Int]? = nil, successBlock: (([Int]) -> ())? = nil) {
     
-    let puzzleNode = PuzzleNode(indices: puzzleIndexList ?? [Int](0..<puzzleColumn * puzzleColumn), blankNumber: puzzleColumn * puzzleColumn - 1, order: puzzleColumn)
-    puzzleInfo = PuzzleInfo(puzzleNode: puzzleNode)
+    puzzleNode = PuzzleNode(indices: puzzleIndexList ?? [Int](0..<puzzleColumn * puzzleColumn), blankNumber: puzzleColumn * puzzleColumn - 1, order: puzzleColumn)
     
     self.originImage = image
     self.successBlock = successBlock
@@ -91,7 +90,7 @@ class PuzzleView: UIView {
   override func layoutSubviews() {
     
     layoutPuzzle()
-    puzzleItemList[puzzleInfo.puzzleNode.indices[puzzleInfo.puzzleNode.blankIndex]].isHidden = true
+    puzzleItemList[puzzleNode.blankNumber].isHidden = true
     
   }
   
@@ -108,7 +107,7 @@ class PuzzleView: UIView {
     
     let images = cutImageToPuzzle(originImage!)
     
-    for i in 0..<puzzleInfo.numberOfItem() {
+    for i in 0..<puzzleNode.numberOfItem() {
       
       //背景
       let bgImageView = UIImageView(frame: getPuzzleFrame(withIndex: i))
@@ -118,10 +117,10 @@ class PuzzleView: UIView {
       addSubview(bgImageView)
     }
     
-    for i in 0..<puzzleInfo.numberOfItem() {
+    for i in 0..<puzzleNode.numberOfItem() {
       
       //拼图
-      let index = puzzleInfo.puzzleNode.indices.index(of: i)! //real index
+      let index = puzzleNode.indices.index(of: i)! //real index
       let puzzleItem = UIImageView(frame: getPuzzleFrame(withIndex: index))
       puzzleItem.contentMode = .scaleAspectFill
       addSubview(puzzleItem)
@@ -173,7 +172,7 @@ class PuzzleView: UIView {
     let imageItemRef = imageSqure.cgImage
     
     var puzzleItem: [UIImage] = []
-    for i in 0..<puzzleInfo.numberOfItem() {
+    for i in 0..<puzzleNode.numberOfItem() {
       let frameToCut = getPuzzleFrame(withIndex: i, withOriginWith: imageSqure.size.width)
       let imageRef = imageItemRef!.cropping(to: frameToCut)
       let imageItem = UIImage(cgImage: imageRef!)
@@ -249,7 +248,6 @@ class PuzzleView: UIView {
   /**
    获取index块在图上的的frame
    
-   
    - parameter index:      图上index
    - parameter originWith: 总宽度
    
@@ -258,9 +256,9 @@ class PuzzleView: UIView {
   private func getPuzzleFrame(withIndex index: Int, withOriginWith originWith: CGFloat? = nil) -> CGRect{
     
     let width = originWith ?? frame.width
-    puzzleItemWidth = (width - CGFloat(puzzleInfo.puzzleNode.order - 1) * minSpace) / CGFloat(puzzleInfo.puzzleNode.order)
-    let x =  (puzzleItemWidth + minSpace) * CGFloat(index % puzzleInfo.puzzleNode.order)
-    let row = index / puzzleInfo.puzzleNode.order
+    puzzleItemWidth = (width - CGFloat(puzzleNode.order - 1) * minSpace) / CGFloat(puzzleNode.order)
+    let x =  (puzzleItemWidth + minSpace) * CGFloat(index % puzzleNode.order)
+    let row = index / puzzleNode.order
     let y = (puzzleItemWidth + minSpace) * CGFloat(row)
     
     return CGRect(x: x, y: y, width: puzzleItemWidth, height: puzzleItemWidth)
@@ -278,7 +276,7 @@ class PuzzleView: UIView {
       //修改ui
       for index in 0..<targetIndexList.count {
         
-        self.puzzleItemList[self.puzzleInfo[targetIndexList[index]]].frame = self.getPuzzleFrame(withIndex: toIndexList[index])
+        self.puzzleItemList[self.puzzleNode.indices[targetIndexList[index]]].frame = self.getPuzzleFrame(withIndex: toIndexList[index])
         
       }
       
@@ -290,31 +288,31 @@ class PuzzleView: UIView {
       let newBlankPostionIndex = targetIndexList.filter({!toIndexList.contains($0)})[0]
       let oldBlankPostionIndex = toIndexList.filter({!targetIndexList.contains($0)})[0]
       
-      self.puzzleItemList[self.puzzleInfo[oldBlankPostionIndex]].frame = self.getPuzzleFrame(withIndex: newBlankPostionIndex)
+      self.puzzleItemList[self.puzzleNode.indices[oldBlankPostionIndex]].frame = self.getPuzzleFrame(withIndex: newBlankPostionIndex)
       
       //修改puzzleIndexList
       
-      let tmp = self.puzzleInfo[oldBlankPostionIndex]
+      let tmp = self.puzzleNode.indices[oldBlankPostionIndex]
       
-      if let tapIndex = self.tapIndex, tapIndex < self.puzzleInfo.puzzleNode.blankIndex {
+      if let tapIndex = self.tapIndex, tapIndex < self.puzzleNode.blankIndex {
         
         for index in (0..<targetIndexList.count).reversed() {
           
-          self.puzzleInfo[toIndexList[index]] = self.puzzleInfo[targetIndexList[index]]
+          self.puzzleNode.indices[toIndexList[index]] = self.puzzleNode.indices[targetIndexList[index]]
           
         }
       } else {
         
         for index in 0..<targetIndexList.count {
           
-          self.puzzleInfo[toIndexList[index]] = self.puzzleInfo[targetIndexList[index]]
+          self.puzzleNode.indices[toIndexList[index]] = self.puzzleNode.indices[targetIndexList[index]]
           
         }
       }
       
-      self.puzzleInfo[newBlankPostionIndex] = tmp
+      self.puzzleNode.indices[newBlankPostionIndex] = tmp
       
-      self.puzzleInfo.puzzleNode.blankIndex = self.puzzleInfo.puzzleNode.indices.index(of: self.puzzleInfo.puzzleNode.blankNumber)!
+      self.puzzleNode.blankIndex = self.puzzleNode.indices.index(of: self.puzzleNode.blankNumber)!
       
       }, completion: { (finish) -> Void in
         
@@ -327,7 +325,7 @@ class PuzzleView: UIView {
    
    - parameter pathList: 移动路径
    */
-  func moveItem(withSwapPathList pathList: [SwapPath], durationPerStep: TimeInterval = 0.05, completionHandle: (()->Void)? = nil) {
+  private func moveItem(withSwapPathList pathList: [SwapPath], durationPerStep: TimeInterval = 0.05, completionHandle: (()->Void)? = nil) {
     
     if pathList.isEmpty {
       isAutoMoving = false
@@ -340,9 +338,9 @@ class PuzzleView: UIView {
       moveItem(withSwapPathList: Array(pathList[1..<pathList.count]), durationPerStep: durationPerStep, completionHandle: completionHandle)
     }
     
-    if pathList[0].toIndex != puzzleInfo.puzzleNode.blankIndex && pathList[0].fromIndex != puzzleInfo.puzzleNode.blankIndex {
+    if pathList[0].toIndex != puzzleNode.blankIndex && pathList[0].fromIndex != puzzleNode.blankIndex {
       
-      print("\(pathList[0]) have no blankIndex \(puzzleInfo.puzzleNode.blankIndex)")
+      print("\(pathList[0]) have no blankIndex \(puzzleNode.blankIndex)")
       assert(false)
       return
     }
@@ -363,10 +361,10 @@ class PuzzleView: UIView {
     var row = Int(point.y / puzzleItemWidth)
     var col = Int(point.x / puzzleItemWidth)
     
-    row = min(puzzleInfo.puzzleNode.order - 1, max(0, row))
-    col = min(puzzleInfo.puzzleNode.order - 1, max(0, col))
+    row = min(puzzleNode.order - 1, max(0, row))
+    col = min(puzzleNode.order - 1, max(0, col))
     
-    let index = puzzleInfo.getIndex(at: Position(row: row, col: col))
+    let index = puzzleNode.getIndex(at: Position(row: row, col: col))
     
     return index
   }
@@ -386,12 +384,11 @@ class PuzzleView: UIView {
     
     isAutoMoving = true
     
-    let swapPathList = randomer.randomPuzzlePath(with: puzzleInfo)
+    let swapPathList = randomer.randomPuzzlePath(with: puzzleNode)
     //把空白块移动到右下脚
     
     moveItem(withSwapPathList: swapPathList)
     
-//    clearCompletionData()
   }
   
   /******************************************************************************
@@ -405,43 +402,28 @@ class PuzzleView: UIView {
    */
   func autoCompleteAll() {
     
-//    let startTime = CACurrentMediaTime()
-//    let path = search.search(with: puzzleInfo.puzzleNode, with: PuzzleNode(indices: [Int](0..<puzzleInfo.puzzleNode.order * puzzleInfo.puzzleNode.order), blankIndex: puzzleInfo.puzzleNode.order * puzzleInfo.puzzleNode.order - 1, order: puzzleInfo.puzzleNode.order))
-//    
-//    print("*--------------------------\(CACurrentMediaTime() - startTime)--------------------------")
-//
-//    complete(with: path)
-    
     guard !isAutoMoving else {
       return
     }
     
     isAutoMoving = true
     
-    normalPathSearch.completion(with: puzzleInfo, puzzleView: self)
-  }
-  
-  func complete(with path: [PuzzleNode]) {
-    
-    guard !path.isEmpty else { return }
-    
-    let node = path.first!
+    let startTime = CACurrentMediaTime()
+    let path = search.search(with: puzzleNode, with: PuzzleNode(indices: [Int](0..<puzzleNode.order * puzzleNode.order), blankNumber: puzzleNode.order * puzzleNode.order - 1, order: puzzleNode.order))
+//
+    print("A*--------------------------\(CACurrentMediaTime() - startTime)--------------------------")
+    print("--------------------------path count: \(path.count)--------------------------")
 
-    UIView.animate(withDuration: 0.5, animations: {
     
-      for (index, num) in node.indices.enumerated() {
-        
-        self.puzzleItemList[num].frame = self.getPuzzleFrame(withIndex: index)
-        
-      }
-      
-    }, completion: {finish in
-    
-      self.puzzleInfo.puzzleNode = node
-      self.complete(with: Array(path[1..<path.count]))
-      
-    })
-    
+    let startTime2 = CACurrentMediaTime()
+
+    let path2 = normalPathSearch.search(with: puzzleNode, with: PuzzleNode(indices: [Int](0..<puzzleNode.order * puzzleNode.order), blankNumber: puzzleNode.order * puzzleNode.order - 1, order: puzzleNode.order))
+
+    print("normal--------------------------\((CACurrentMediaTime() - startTime2))--------------------------")
+    print("--------------------------path count: \(path2.count)--------------------------")
+
+    moveItem(withSwapPathList: path2, durationPerStep: 0.1)
+
   }
   
   /******************************************************************************
@@ -454,19 +436,19 @@ class PuzzleView: UIView {
    */
   private func getMoveItem(){
     
-    let tapPosition = puzzleInfo.getPosition(at: tapIndex)
-    let blankPosition = puzzleInfo.getPosition(at: puzzleInfo.puzzleNode.blankIndex)
+    let tapPosition = puzzleNode.getPosition(at: tapIndex)
+    let blankPosition = puzzleNode.getPosition(at: puzzleNode.blankIndex)
     
     moveItemFromIndexList = []
     
     if tapPosition.row == blankPosition.row {
       if tapPosition.col < blankPosition.col {
-        moveItemFromIndexList = [Int](tapIndex..<puzzleInfo.puzzleNode.blankIndex)
+        moveItemFromIndexList = [Int](tapIndex..<puzzleNode.blankIndex)
         moveItemToIndexList = moveItemFromIndexList.map({$0 + 1})
       }
       
       if tapPosition.col > blankPosition.col {
-        moveItemFromIndexList = [Int](puzzleInfo.puzzleNode.blankIndex + 1...tapIndex)
+        moveItemFromIndexList = [Int](puzzleNode.blankIndex + 1...tapIndex)
         moveItemToIndexList = moveItemFromIndexList.map({$0 - 1})
         
       }
@@ -475,22 +457,22 @@ class PuzzleView: UIView {
     if tapPosition.col == blankPosition.col {
       if tapPosition.row < blankPosition.row {
         for i in 0..<blankPosition.row - tapPosition.row {
-          moveItemFromIndexList += [(tapIndex + i * puzzleInfo.puzzleNode.order)]
-          moveItemToIndexList = moveItemFromIndexList.map({$0 + puzzleInfo.puzzleNode.order})
+          moveItemFromIndexList += [(tapIndex + i * puzzleNode.order)]
+          moveItemToIndexList = moveItemFromIndexList.map({$0 + puzzleNode.order})
           
         }
       }
       
       if tapPosition.row > blankPosition.row {
         for i in 0..<tapPosition.row - blankPosition.row {
-          moveItemFromIndexList += [(puzzleInfo.puzzleNode.blankIndex + (i + 1) * puzzleInfo.puzzleNode.order)]
-          moveItemToIndexList = moveItemFromIndexList.map({$0 - puzzleInfo.puzzleNode.order})
+          moveItemFromIndexList += [(puzzleNode.blankIndex + (i + 1) * puzzleNode.order)]
+          moveItemToIndexList = moveItemFromIndexList.map({$0 - puzzleNode.order})
           
         }
       }
     }
     
-    moveItems = moveItemFromIndexList.map({puzzleItemList[puzzleInfo[$0]]})
+    moveItems = moveItemFromIndexList.map({puzzleItemList[puzzleNode.indices[$0]]})
     itemBeginFrameList = moveItems.map({$0.frame})
   }
   
@@ -504,19 +486,19 @@ class PuzzleView: UIView {
     
     if canMove {
       //计算被点击块可以移动的范围
-      if puzzleInfo.getPosition(at: tapIndex).col == puzzleInfo.getPosition(at: puzzleInfo.puzzleNode.blankIndex).col {
+      if puzzleNode.getPosition(at: tapIndex).col == puzzleNode.getPosition(at: puzzleNode.blankIndex).col {
         moveDirect = .ver
         
-        minBorder = tapIndex > puzzleInfo.puzzleNode.blankIndex ? tapItem.frame.minY - tapItem.frame.width - minSpace: tapItem.frame.minY
-        maxBorder = tapIndex > puzzleInfo.puzzleNode.blankIndex ? tapItem.frame.maxY - tapItem.frame.width : tapItem.frame.maxY + minSpace
+        minBorder = tapIndex > puzzleNode.blankIndex ? tapItem.frame.minY - tapItem.frame.width - minSpace: tapItem.frame.minY
+        maxBorder = tapIndex > puzzleNode.blankIndex ? tapItem.frame.maxY - tapItem.frame.width : tapItem.frame.maxY + minSpace
         
       }
       
-      if puzzleInfo.getPosition(at: tapIndex).row == puzzleInfo.getPosition(at: puzzleInfo.puzzleNode.blankIndex).row {
+      if puzzleNode.getPosition(at: tapIndex).row == puzzleNode.getPosition(at: puzzleNode.blankIndex).row {
         moveDirect = .hor
         
-        minBorder = tapIndex > puzzleInfo.puzzleNode.blankIndex ? tapItem.frame.minX - tapItem.frame.width  - minSpace: tapItem.frame.minX
-        maxBorder = tapIndex > puzzleInfo.puzzleNode.blankIndex ? tapItem.frame.maxX - tapItem.frame.width : tapItem.frame.maxX + minSpace
+        minBorder = tapIndex > puzzleNode.blankIndex ? tapItem.frame.minX - tapItem.frame.width  - minSpace: tapItem.frame.minX
+        maxBorder = tapIndex > puzzleNode.blankIndex ? tapItem.frame.maxX - tapItem.frame.width : tapItem.frame.maxX + minSpace
         
       }
     }
@@ -531,12 +513,12 @@ class PuzzleView: UIView {
       //当前点击的在位置上的序号
       tapIndex = getIndex(withPoint: beginTouchOrigin)
       
-      if tapIndex == puzzleInfo.puzzleNode.blankIndex {
+      if tapIndex == puzzleNode.blankIndex {
         return
       }
       //当前点击的Item
-      tapItem = puzzleItemList[puzzleInfo[tapIndex]]
-      blankItem = puzzleItemList[puzzleInfo[puzzleInfo.puzzleNode.blankIndex]]
+      tapItem = puzzleItemList[puzzleNode.indices[tapIndex]]
+      blankItem = puzzleItemList[puzzleNode.indices[puzzleNode.blankIndex]]
       //记录点击item的初始位置，不然之后会改变
       tapItemBeginFrame = tapItem.frame
       //获取移动item所需属性
@@ -591,17 +573,17 @@ class PuzzleView: UIView {
     var isMoved = false
     
     //判断items的位置是否被移动过
-    isMoved = ((moveDirect == .hor && ((tapItem.center.x < maxBorder) == (tapIndex > puzzleInfo.puzzleNode.blankIndex))) || (moveDirect == .ver && ((tapItem.center.y < maxBorder) == (tapIndex > puzzleInfo.puzzleNode.blankIndex))))
+    isMoved = ((moveDirect == .hor && ((tapItem.center.x < maxBorder) == (tapIndex > puzzleNode.blankIndex))) || (moveDirect == .ver && ((tapItem.center.y < maxBorder) == (tapIndex > puzzleNode.blankIndex))))
     
     move(0.1, targetIndexList: moveItemFromIndexList, toIndexList: isMoved == true ? moveItemToIndexList : moveItemFromIndexList) { () -> () in
       
-      self.puzzleInfo.printList()
+      self.puzzleNode.printList()
       self.canMove = false
       
-      self.delegate?.puzzleView?(self, didMoveWithPuzzleIndexList: self.puzzleInfo.puzzleNode.indices)
+      self.delegate?.puzzleView?(self, didMoveWithPuzzleIndexList: self.puzzleNode.indices)
       
-      if self.puzzleInfo.puzzleNode.indices == [Int](0..<9) {
-        self.successBlock?(self.puzzleInfo.puzzleNode.indices)
+      if self.puzzleNode.indices == [Int](0..<9) {
+        self.successBlock?(self.puzzleNode.indices)
       }
     }
   }

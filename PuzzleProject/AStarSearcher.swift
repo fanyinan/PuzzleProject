@@ -33,8 +33,8 @@ class AStarSearcher: PuzzlePathSearcher {
     
     while let currentStatus = open.deQueue() {
       
-//      print("--------\(count)---------------")
-//      
+      print("--------\(count)---\(currentStatus.fValue)------------")
+      
 //      print("open: \(open.data[0..<min(10, open.data.count)].map({"\($0.fValue)"}).joined(separator: ", "))")
 //      print("current: \(currentStatus.indices)")
       count += 1
@@ -56,9 +56,9 @@ class AStarSearcher: PuzzlePathSearcher {
       
       for node in currentStatus.childNodes {
         
-        node.gValue = currentStatus.gValue + 1
-        node.hValue = node.estimate()
-        node.fValue = node.hValue + node.gValue
+        let gValue = currentStatus.gValue + 1
+        let hValue = node.estimate()
+        node.fValue = hValue + gValue
         
 //        print("child: \(node.indices) \(node.fValue)")
         open.enQueue(element: node)
