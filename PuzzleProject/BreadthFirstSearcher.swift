@@ -1,5 +1,5 @@
 //
-//  BreathFirstSearcher.swift
+//  BreadthFirstSearcher.swift
 //  PuzzleProject
 //
 //  Created by 范祎楠 on 2016/12/8.
@@ -8,7 +8,7 @@
 
 import Foundation
 
-class BreathFirstSearcher: PuzzlePathSearcher {
+class BreadthFirstSearcher: PuzzlePathSearcher {
   
   var open: [PuzzleNode] = []
   var close: Set<String> = []

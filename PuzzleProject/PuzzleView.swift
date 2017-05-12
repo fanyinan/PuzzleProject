@@ -31,8 +31,6 @@ class PuzzleView: UIView {
   private var isAutoMoving = false//标识是否正在自动移动，（随机和完成）
   private(set) var puzzleNode: PuzzleNode
   private var randomer = Randomer()
-  private var normalPathSearch = NormalPathSearch()
-  private var search = AStarSearcher()
   private var path: [PuzzleNode] = []
   /******************************************************************************
   *  滑动块相关成员变量
@@ -69,6 +67,8 @@ class PuzzleView: UIView {
       isUserInteractionEnabled = movenable
     }
   }
+  
+  var searchAlgorithm: PuzzlePathSearcher = NormalPathSearch()
   
   init(frame: CGRect, puzzleColumn: Int, image: UIImage?, puzzleIndexList: [Int]? = nil, successBlock: (([Int]) -> ())? = nil) {
     
@@ -325,7 +325,7 @@ class PuzzleView: UIView {
    
    - parameter pathList: 移动路径
    */
-  private func moveItem(withSwapPathList pathList: [SwapPath], durationPerStep: TimeInterval = 0.05, completionHandle: (()->Void)? = nil) {
+  private func moveItem(withSwapPathList pathList: [SwapPath], durationPerStep: TimeInterval = 0.2, completionHandle: (()->Void)? = nil) {
     
     if pathList.isEmpty {
       isAutoMoving = false
@@ -409,21 +409,13 @@ class PuzzleView: UIView {
     isAutoMoving = true
     
     let startTime = CACurrentMediaTime()
-    let path = search.search(with: puzzleNode, with: PuzzleNode(indices: [Int](0..<puzzleNode.order * puzzleNode.order), blankNumber: puzzleNode.order * puzzleNode.order - 1, order: puzzleNode.order))
-//
+    let path = searchAlgorithm.search(with: puzzleNode, with: PuzzleNode(indices: [Int](0..<puzzleNode.order * puzzleNode.order), blankNumber: puzzleNode.order * puzzleNode.order - 1, order: puzzleNode.order))
+
     print("A*--------------------------\(CACurrentMediaTime() - startTime)--------------------------")
     print("--------------------------path count: \(path.count)--------------------------")
 
+    moveItem(withSwapPathList: path)
     
-    let startTime2 = CACurrentMediaTime()
-
-    let path2 = normalPathSearch.search(with: puzzleNode, with: PuzzleNode(indices: [Int](0..<puzzleNode.order * puzzleNode.order), blankNumber: puzzleNode.order * puzzleNode.order - 1, order: puzzleNode.order))
-
-    print("normal--------------------------\((CACurrentMediaTime() - startTime2))--------------------------")
-    print("--------------------------path count: \(path2.count)--------------------------")
-
-    moveItem(withSwapPathList: path2, durationPerStep: 0.1)
-
   }
   
   /******************************************************************************
